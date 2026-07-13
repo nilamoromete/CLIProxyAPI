@@ -7,13 +7,12 @@
 
 # Hidden feature: Preserve usage statistics across rebuilds
 # Usage: ./docker-build.sh --with-usage
-# First run prompts for management API key, saved to temp/stats/.api_secret
+# The management key is read from the environment or prompted for each run.
 
 set -euo pipefail
 
 STATS_DIR="temp/stats"
 STATS_FILE="${STATS_DIR}/.usage_backup.json"
-SECRET_FILE="${STATS_DIR}/.api_secret"
 WITH_USAGE=false
 
 get_port() {
@@ -25,18 +24,13 @@ get_port() {
 }
 
 export_stats_api_secret() {
-  if [[ -f "${SECRET_FILE}" ]]; then
-    API_SECRET=$(cat "${SECRET_FILE}")
-  else
-    if [[ ! -d "${STATS_DIR}" ]]; then
-      mkdir -p "${STATS_DIR}"
-    fi
-    echo "First time using --with-usage. Management API key required."
+  API_SECRET="${CLI_PROXY_MANAGEMENT_KEY:-}"
+  if [[ -z "${API_SECRET}" ]]; then
+    echo "Management API key required for --with-usage."
     read -r -p "Enter management key: " -s API_SECRET
     echo
-    echo "${API_SECRET}" > "${SECRET_FILE}"
-    chmod 600 "${SECRET_FILE}"
   fi
+  [[ -n "${API_SECRET}" ]] || { echo "Management API key cannot be empty."; exit 1; }
 }
 
 check_container_running() {
@@ -124,6 +118,10 @@ read -r -p "Enter choice [1-2]: " choice
 case "$choice" in
   1)
     echo "--- Running with Pre-built Image ---"
+    if [[ -z "${CLI_PROXY_IMAGE:-}" || "${CLI_PROXY_IMAGE}" == *":latest" ]]; then
+      echo "Set CLI_PROXY_IMAGE to an explicit version tag or digest; :latest is refused." >&2
+      exit 1
+    fi
     if [[ "${WITH_USAGE}" == "true" ]]; then
       export_stats
     fi
