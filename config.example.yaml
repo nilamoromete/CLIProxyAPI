@@ -1,6 +1,6 @@
 # Server host/interface to bind to. Default is empty ("") to bind all interfaces (IPv4 + IPv6).
 # Use "127.0.0.1" or "localhost" to restrict access to local machine only.
-host: ""
+host: "127.0.0.1"
 
 # Server port
 port: 8317
@@ -32,10 +32,8 @@ remote-management:
 auth-dir: "~/.cli-proxy-api"
 
 # API keys for authentication
-api-keys:
-  - "your-api-key-1"
-  - "your-api-key-2"
-  - "your-api-key-3"
+# Generate a unique client key before enabling authenticated proxy access.
+api-keys: []
 
 # Enable debug logging
 debug: false

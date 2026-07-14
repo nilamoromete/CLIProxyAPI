@@ -2,6 +2,7 @@ package configaccess
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -34,9 +35,18 @@ func newProvider(cfg *sdkconfig.AccessProvider, _ *sdkconfig.SDKConfig) (sdkacce
 		if key == "" {
 			continue
 		}
+		if isPlaceholderAPIKey(key) {
+			return nil, fmt.Errorf("config access provider %q refuses placeholder API key", name)
+		}
 		keys[key] = struct{}{}
 	}
 	return &provider{name: name, keys: keys}, nil
+}
+
+func isPlaceholderAPIKey(key string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(key))
+	return strings.HasPrefix(normalized, "your-api-key") ||
+		normalized == "changeme" || normalized == "change-me"
 }
 
 func (p *provider) Identifier() string {

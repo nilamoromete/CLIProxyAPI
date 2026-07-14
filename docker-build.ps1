@@ -16,6 +16,9 @@ $choice = Read-Host -Prompt "Enter choice [1-2]"
 switch ($choice) {
     "1" {
         Write-Host "--- Running with Pre-built Image ---"
+        if ([string]::IsNullOrWhiteSpace($env:CLI_PROXY_IMAGE) -or $env:CLI_PROXY_IMAGE.EndsWith(':latest')) {
+            throw "Set CLI_PROXY_IMAGE to an explicit version tag or digest; :latest is refused."
+        }
         docker compose up -d --remove-orphans --no-build
         Write-Host "Services are starting from remote image."
         Write-Host "Run 'docker compose logs -f' to see the logs."
